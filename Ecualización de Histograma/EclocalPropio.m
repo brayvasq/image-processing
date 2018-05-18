@@ -3,7 +3,7 @@
 %Brayan Vasquez Villa
 %Juan Sebastián Marulanda Sánchez
 
-imagenOriginal = double(imread('image3.jpg'));
+imagenOriginal = double(imread('../Images/cuadro.png'));
 imagenGris = imagenOriginal(:,:,1);
 tamanoImagen = size(imagenGris);
 filas = tamanoImagen(1);

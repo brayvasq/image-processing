@@ -1,18 +1,4 @@
 
-isPar=1;
-while isPar
-    tamFiltro=input('Ingrese tama�o en de la m�scara (impar) : ');
-    if mod(tamFiltro,2)~=0
-        isPar=0;
-    end
-end
-
-disp('Los pesos de la m�scara se llenan por columnas empezando por la mas izquierda')
-%mascara=ones(tamFiltro,tamFiltro);
-%for i=1:tamFiltro^2
-%    mascara(i)=input(['Ingrese el peso mascara en pos ' num2str(i) ' : ']);
-%end
-
 mascara = [0 1 0; 1 -4 1; 0 1 0];
 
 %mascara2 = [1 1 1; 0 0 0; -1 -1 -1];
