@@ -1,0 +1,17 @@
+ecualizacionGlobal: define detalles que no se notan en la imagen por estar muy oscura o clara (contraste)
+ecualizacionLocal: define detalles que no se notan en la imagen por estar muy oscura o clara (contraste)
+eightconn: Para hallar el borde o relleno gracias a los vectores conectados del mismo color
+filtroButterworth: quita el ruido
+fourconn: Para hallar el borde o relleno gracias a los vectores conectados del mismo color
+Laplaciano: Da mejor definición a la imagen a partir de mascaras que definen los bordes
+mconn: Para hallar el borde o relleno gracias a los vectores conectados del mismo color
+pasaAltos: quita el ruido basado en los puntos que tengan concentraciones de puntos negros
+pasaBajos: quita el ruido basado en los puntos que tenga concentraciones de puntos blanco
+Prewitt: Da mejor definición a la imagen a partir de mascaras que definen los bordes
+Prewitt4mask: Da mejor definición a la imagen a partir de mascaras que definen los bordes
+realceHistograma: Es una ecualización que se da por estadisticas pero tiene la misma función (No nos funcionó)
+resolucionEspacial: pixela la imagen, le ingresa el tamaño del pixel
+resolucionNivelesGris:recibe la cantidad de bits (2 a la n (n)) y pone la imagen en esa cantidad de colores en escala de gris (si le ingresa 1 sólo es blanco y negro, 2 es 2 grises blanco y negro)
+Roberts: Da mejor definición a la imagen a partir de mascaras que definen los bordes
+rotarImagen: Gira la imagen
+Sobel: Da mejor definición a la imagen a partir de mascaras que definen los bordes
