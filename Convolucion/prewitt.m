@@ -1,4 +1,7 @@
-
+a=imread('pruena.jpg');
+a = a(:,:,1);
+figure;
+imshow(a);
 isPar=1;
 while isPar
     tamFiltro=input('Ingrese tama�o en de la m�scara (impar) : ');
@@ -17,6 +20,13 @@ mascara = [-1 0 1; -1 0 1; -1 0 1];
 
 mascara2 = [-1 -1 -1; 0 0 0; 1 1 1];
 disp(mascara);
+
+b=aplicarFiltroLineal(mascara,tamFiltro,a);
+c=aplicarFiltroLineal(mascara,3,a);
+d = b + c;
+figure;
+imshow(d);
+
 function imgResultado=aplicarFiltroLineal(filtro,tamF,img)
     
     imgResultado=img;
@@ -43,13 +53,4 @@ function valorP=aplicarFiltroRegion(filtro,tamF,img,i,j)
     valorP=suma;
 end
 
-a=imread('prueba3.jpg');
-a = a(:,:,1);
-figure;
-imshow(a);
 
-b=aplicarFiltroLineal(mascara,tamFiltro,a);
-c=aplicarFiltroLineal(mascara,3,a);
-d = b + c;
-figure;
-imshow(d);

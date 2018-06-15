@@ -1,4 +1,4 @@
-image = imread('Images/image.jpg');
+image = imread('pruena.jpg');
 image = double(image(:,:,1));
 imshow(uint8(image));
 result = double(zeros(size(image)));
