@@ -5,139 +5,148 @@ clasificar('base/Frontal/Capture_00034.jpg');
 %------------------------------------------------------------------------
 function W = clasificar(archivo)
 
-    %imgnsUmbral=['Capture_00022.jpg','Capture_00023.jpg','Capture_00032.jpg','Capture_00033.jpg'];
-    % Step 1: Read image Read in
+    
+    % Paso 1: Leer la imagen
     RGB = imread(archivo);
     figure,
     imshow(RGB),
-    title('Original Image');
+    title('Imagen Original');
 
-    % Step 2: Convert image from rgb to gray 
+    % Paso 2: Convertir la imagen a escala de grises 
     GRAY = rgb2gray(RGB);
     GRAY = imadjust(GRAY);
     
+    
     %[pix1] = imhist(GRAY);
-
     %bar(pix1);
     %fprintf('Val hist %d',pix1);
     %title('Histograma de la img');
-
+    
     
     figure,    
     imshow(GRAY),
-    title('Gray Image');
+    title('Escala Grises');
+    
+    
 
-    % Step 3: Threshold the image Convert the image to black and white in order
-    % to prepare for boundary tracing using bwboundaries. 
+    % Paso 3: Binarizar la imagen en escala de grises usando binarizacion adaptativa o mediante calculo
+    % del umbral usando el metodo de otsu (funcion graythresh() de matlab). 
     
-  threshold = graythresh(GRAY);
-  BW = imbinarize(GRAY, threshold);
+    threshold = graythresh(GRAY);%calculado con metodo de otsu
+    BW = imbinarize(GRAY, threshold);
     
+    %BW = imbinarize(GRAY,'adaptive'); 
+    
+    
+    %%Despues de binarizar (mas que todo por metodo adaptativo) hay que
+    %%eliminar el ruido, el problema es que el metodo de eliminacion de
+    %%ruido debe servir para TODAS (lo ideal) las imagenes de la base
+    
+    BW = bwareafilt(BW, 50);%Filtrado por tamaño, elementos con menos de 50 px
         
-    %%Conf img problema threshold
-%   BW = imbinarize(GRAY,'adaptive');  
-%    
-     %objetoEstruc = strel('diamond', 5);
-     %BW=imerode(BW,objetoEstruc);
-%     
-     BW = bwareafilt(BW, 50);
-%    objetoEstruc = strel('diamond', 1);
-%    BW=imerode(BW,objetoEstruc);
-   %objetoEstruc = strel('diamond', 3);
- %  BW=imdilate(BW,objetoEstruc);
-   
- %  
-   
-
-%   objetoEstruc = strel('disk', 5);
- %  BW=imdilate(BW,objetoEstruc);
+ 
+    %   
+    %    
+    %objetoEstruc = strel('diamond', 5);
+    %BW=imerode(BW,objetoEstruc);
+    %     
     
-%    
-% %    
-%    objetoEstruc = strel('disk', 1);
-%    BW=imerode(BW,objetoEstruc);
-%    objetoEstruc = strel('disk', 3);
-%    BW=imdilate(BW,objetoEstruc);
+    %objetoEstruc = strel('diamond', 1);
+    %BW=imerode(BW,objetoEstruc);
+    %objetoEstruc = strel('diamond', 3);
+    %BW=imdilate(BW,objetoEstruc);
+   
+    %objetoEstruc = strel('disk', 5);
+    %BW=imdilate(BW,objetoEstruc);
+    
+  
+    %objetoEstruc = strel('disk', 1);
+    %BW=imerode(BW,objetoEstruc);
+    %objetoEstruc = strel('disk', 3);
+    %BW=imdilate(BW,objetoEstruc);
 
+    
+    
 
-  BW = imfill(BW,'holes');
+    BW = imfill(BW,'holes');%Llenar los huecos dentro de las figuras.Principalmente los que quedan cuando se
+                            %binariza con el metodo adaptativo
 
     figure,
     imshow(BW),
-    title('Binary Image');
+    title('Imagen Binaria');
+    
 
-    %Step 4: Invert the Binary Image
+    %Paso 4: Invertir la imagen binaria (creo que no se necesita)
 %     BW = ~ BW;
 %     figure,
 %     imshow(BW),
 %     title('Inverted Binary Image');
 
 
-    % Step 5: Find the boundaries Concentrate only on the exterior boundaries.
-    % Option 'noholes' will accelerate the processing by preventing
-    % bwboundaries from searching for inner contours. 
-   [B,L,N] = bwboundaries(BW, 'noholes');
+    % Paso 5: Encontrar los bordes de las regiones de la imagen binaria
+    % Opcion 'noholes' para solo buscar contornos externos. 
+    
+    [B,L,N] = bwboundaries(BW, 'noholes');
 
 
 
-    % Step 6: Determine objects properties
-    STATS = regionprops(L, 'all'); % we need 'BoundingBox' and 'Extent'
+    % Paso 6: Determinar propiedades de los objetos delimitados usando la
+    % funcion regionprops()
+    
+    STATS = regionprops(L, 'all'); % Todas las caracteristicas posibles, aunque solo se esten utilizando algunas
+                                   % (perimetro, area,centroide, etc)
 
     
-
-    % Step 7: Classify Shapes according to properties
-    % Square = 3 = (1 + 2) = (X=Y + Extent = 1)
-    % Rectangular = 2 = (0 + 2) = (only Extent = 1)
-    % Circle = 1 = (1 + 0) = (X=Y , Extent < 1)
-    % UNKNOWN = 0
+    % Paso 7: Clasificar formas segun las propiedades    
 
     figure,
     imshow(RGB),
-    title('Results');
+    title('Resultado');
     
-   SquareMetric = zeros(N,1);
-   TriangleMetric = zeros(N,1);
+    metricaCuadrado = zeros(N,1);
+    metricaTriangulo = zeros(N,1);
     
     
     
-   hold on
+    hold on
     
     for i = 1 : length(STATS)
-      boundary = B{i};
-      [rx,ry,boxArea] = minboundrect( boundary(:,2), boundary(:,1));
-      plot(rx,ry);
+        boundary = B{i};
+        [rx,ry,areaCuadrado] = minboundrect( boundary(:,2), boundary(:,1)); %Metodo para hallar el minimo rectangulo que contiene a la figura
+        plot(rx,ry);
       
       
-       %get width and height of bounding box
-       width = sqrt( sum( (rx(2)-rx(1)).^2 + (ry(2)-ry(1)).^2));
-       height = sqrt( sum( (rx(2)-rx(3)).^2+ (ry(2)-ry(3)).^2));
-       aspectRatio = width/height;
+        %Ancho y alto del cuadrado que contiene la figura
+        ancho = sqrt( sum( (rx(2)-rx(1)).^2 + (ry(2)-ry(1)).^2));
+        alto = sqrt( sum( (rx(2)-rx(3)).^2+ (ry(2)-ry(3)).^2));
+        proporcionLados= ancho/alto;
        
-       if aspectRatio > 1  
-           aspectRatio = height/width;  %make aspect ratio less than unity
-       end
-       SquareMetric(i) = aspectRatio;    %aspect ratio of box sides
-       TriangleMetric(i) = STATS(i).Area/boxArea;
+        if proporcionLados > 1  
+            proporcionLados = alto/ancho;  %proporcion de lados < 1
+        end
+        metricaCuadrado(i) = proporcionLados;    %proporcion (Aspect ratio)
+        metricaTriangulo(i) = STATS(i).Area/areaCuadrado;
       
        
-      cM=(STATS(i).Perimeter.^2)./(4*pi*STATS(i).Area);
-      centroid = STATS(i).Centroid;
-      isCircle =   (cM < 1.1);
-      if isCircle          
-          plot(centroid(1),centroid(2),'wO');
-           disp(['Circ']);
-      elseif (TriangleMetric(i) < 0.6)
-              plot(centroid(1),centroid(2),'w^');
-              disp(['Tri']);
-      elseif (SquareMetric(i) > 0.9)
-               plot(centroid(1),centroid(2),'wS');
-               disp(['Sq']);
-      else
-          plot(centroid(1),centroid(2),'wD');
-          disp(['Rect']);
-      end
+        metricaCirculo=(STATS(i).Perimeter.^2)./(4*pi*STATS(i).Area);
+        centroid = STATS(i).Centroid;
+        esCirculo =   (metricaCirculo < 1.1);
+        
+        
+        if esCirculo          
+            plot(centroid(1),centroid(2),'wO');
+            disp(['Circulo']);
+        elseif (metricaTriangulo(i) < 0.6)
+            plot(centroid(1),centroid(2),'w^');
+            disp(['Triangulo']);
+        elseif (metricaCuadrado(i) > 0.9)
+            plot(centroid(1),centroid(2),'wS');
+            disp(['Cuadrado']);
+        else
+            plot(centroid(1),centroid(2),'wD');
+            disp(['Rectangulo']);
+        end
     end
-
     
     return
 end
