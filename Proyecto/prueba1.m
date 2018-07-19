@@ -1,11 +1,12 @@
-
-
-clasificar('base/Frontal/Capture_00033.jpg');
+%Proyecto final
+%Daniel Vargas Gonzales
+%Brayan Stiven Vasquez Villa
+%Juan Sebastian Marulanda Sanchez
+clasificar('base/Frontal/Capture_00031.jpg');
 
 %------------------------------------------------------------------------
 function W = clasificar(archivo)
 
-    
     % Paso 1: Leer la imagen
     RGB = imread(archivo);
     figure,
@@ -107,7 +108,7 @@ function W = clasificar(archivo)
     metricaCuadrado = zeros(N,1);
     metricaTriangulo = zeros(N,1);
     
-    
+    nColors=0;
     
     hold on
     
@@ -147,6 +148,8 @@ function W = clasificar(archivo)
             plot(centroid(1),centroid(2),'wD');
             disp(['Rectangulo']);
         end
+        regiones(:,:,i) = roipoly(RGB,rx,ry);
+        nColors=nColors+1;
     end
     
     %% Secciï¿½n Color
@@ -158,16 +161,8 @@ function W = clasificar(archivo)
     % donde esta el color entre rojo y verde, b= cromaticidad que indica
     % donde esta el color entre azul y amarillo
     
-    nColors = 6; %numero de colores
-    regiones = false([size(RGB,1) size(RGB,2) nColors]);
-
-    % creando las regiones
-    for count = 1:nColors
-        regiones(:,:,count) = roipoly(RGB,region_coordinates(:,1,count),region_coordinates(:,2,count));
-    end
     %figure;
     %imshow(regiones(:,:,2)),title('sample region for red');
-        
     %convirtiendo a lab
     lab_rgb = rgb2lab(RGB);
         
@@ -176,12 +171,12 @@ function W = clasificar(archivo)
     color_markers = zeros([nColors, 2]);
 
     % guardando los marcadores de a y b en la region
-    for count = 1:nColors
-        color_markers(count,1) = mean2(a(regiones(:,:,count)));
-        color_markers(count,2) = mean2(b(regiones(:,:,count)));
+    for cantidad = 1:nColors
+        color_markers(cantidad,1) = mean2(a(regiones(:,:,cantidad)));
+        color_markers(cantidad,2) = mean2(b(regiones(:,:,cantidad)));
     end
     
-    fprintf('[%0.3f,%0.3f] \n',color_markers(2,1),color_markers(2,2));
+
     
     % Paso 2: Clasificando cada pixel deacuerdo al vecino mas cercanos
     color_labels = 0:nColors-1;
@@ -191,8 +186,8 @@ function W = clasificar(archivo)
     distancia_lab = zeros([size(a), nColors]);
         
         
-    for count = 1:nColors
-        distancia_lab(:,:,count) = ( (a - color_markers(count,1)).^2 + (b - color_markers(count,2)).^2 ).^0.5;
+    for cantidad = 1:nColors
+        distancia_lab(:,:,cantidad) = ( (a - color_markers(cantidad,1)).^2 + (b - color_markers(cantidad,2)).^2 ).^0.5;
     end
     
     [~, label] = min(distancia_lab,[],3);
@@ -203,22 +198,16 @@ function W = clasificar(archivo)
     rgb_label = repmat(label,[1 1 3]);
     img_sementada = zeros([size(RGB), nColors],'uint8');
 
-    for count = 1:nColors
+    for cantidad = 1:nColors
         color = RGB;
-        color(rgb_label ~= color_labels(count)) = 0;
-        img_sementada(:,:,:,count) = color;
+        color(rgb_label ~= color_labels(cantidad)) = 0;
+        img_sementada(:,:,:,cantidad) = color;
     end
     
-    figure;
-    imshow(img_sementada(:,:,:,2)), title('Objetos Rojos');
-    figure;
-    imshow(img_sementada(:,:,:,3)), title('Objetos Verdes');
-    figure;
-    imshow(img_sementada(:,:,:,4)), title('Objetos Morados');
-    figure;
-    imshow(img_sementada(:,:,:,6)), title('Objetos Amarillos');
-    figure;
-    imshow(img_sementada(:,:,:,5)), title('Objetos Magenta');
+    for i = 1:nColors
+        figure,imshow(img_sementada(:,:,:,i));
+        title('Separación por colores');
+    end
     
     return
 end
