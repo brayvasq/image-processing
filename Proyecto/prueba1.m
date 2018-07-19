@@ -43,7 +43,7 @@ function W = clasificar(archivo)
     %%eliminar el ruido, el problema es que el metodo de eliminacion de
     %%ruido debe servir para TODAS (lo ideal) las imagenes de la base
     
-    BW = bwareafilt(BW, 50);%Filtrado por tamaño, elementos con menos de 50 px
+    BW = bwareafilt(BW, 50);%Filtrado por tamaï¿½o, elementos con menos de 50 px
         
  
       
@@ -116,7 +116,7 @@ function W = clasificar(archivo)
         [rx,ry,areaCuadrado] = minboundrect( boundary(:,2), boundary(:,1)); %Metodo para hallar el minimo rectangulo que contiene a la figura
         plot(rx,ry);
         
-        %% Sección areas
+        %% Secciï¿½n areas
         %Ancho y alto del cuadrado que contiene la figura
         ancho = sqrt( sum( (rx(2)-rx(1)).^2 + (ry(2)-ry(1)).^2));
         alto = sqrt( sum( (rx(2)-rx(3)).^2+ (ry(2)-ry(3)).^2));
@@ -149,62 +149,76 @@ function W = clasificar(archivo)
         end
     end
     
-    %% Sección Color
-        load regioncoordinates;
-        nColors = 6;
-        sample_regions = false([size(RGB,1) size(RGB,2) nColors]);
+    %% Secciï¿½n Color
+    % Cargando el paquete a usar para la conversiï¿½n de modelo de color
+    load regioncoordinates;
+    
+    % Paso 1 : Calcular los colores de muesta en el modelo de color L*a*b
+    % para cada region donde L = luminosidad, a = cromaticidad que indica
+    % donde esta el color entre rojo y verde, b= cromaticidad que indica
+    % donde esta el color entre azul y amarillo
+    
+    nColors = 6; %numero de colores
+    regiones = false([size(RGB,1) size(RGB,2) nColors]);
 
-        for count = 1:nColors
-          sample_regions(:,:,count) = roipoly(RGB,region_coordinates(:,1,count),region_coordinates(:,2,count));
-        end
-        figure;
-        imshow(sample_regions(:,:,2)),title('sample region for red');
+    % creando las regiones
+    for count = 1:nColors
+        regiones(:,:,count) = roipoly(RGB,region_coordinates(:,1,count),region_coordinates(:,2,count));
+    end
+    %figure;
+    %imshow(regiones(:,:,2)),title('sample region for red');
         
-        lab_fabric = rgb2lab(RGB);
+    %convirtiendo a lab
+    lab_rgb = rgb2lab(RGB);
         
-        a = lab_fabric(:,:,2);
-        b = lab_fabric(:,:,3);
-        color_markers = zeros([nColors, 2]);
+    a = lab_rgb(:,:,2);
+    b = lab_rgb(:,:,3);
+    color_markers = zeros([nColors, 2]);
 
-        for count = 1:nColors
-          color_markers(count,1) = mean2(a(sample_regions(:,:,count)));
-          color_markers(count,2) = mean2(b(sample_regions(:,:,count)));
-        end
-        fprintf('[%0.3f,%0.3f] \n',color_markers(2,1),color_markers(2,2));
-        color_labels = 0:nColors-1;
+    % guardando los marcadores de a y b en la region
+    for count = 1:nColors
+        color_markers(count,1) = mean2(a(regiones(:,:,count)));
+        color_markers(count,2) = mean2(b(regiones(:,:,count)));
+    end
+    
+    fprintf('[%0.3f,%0.3f] \n',color_markers(2,1),color_markers(2,2));
+    
+    % Paso 2: Clasificando cada pixel deacuerdo al vecino mas cercanos
+    color_labels = 0:nColors-1;
         
-        a = double(a);
-        b = double(b);
-        distance = zeros([size(a), nColors]);
+    a = double(a);
+    b = double(b);
+    distancia_lab = zeros([size(a), nColors]);
         
         
-        for count = 1:nColors
-          distance(:,:,count) = ( (a - color_markers(count,1)).^2 + ...
-                              (b - color_markers(count,2)).^2 ).^0.5;
-        end
+    for count = 1:nColors
+        distancia_lab(:,:,count) = ( (a - color_markers(count,1)).^2 + (b - color_markers(count,2)).^2 ).^0.5;
+    end
+    
+    [~, label] = min(distancia_lab,[],3);
+    label = color_labels(label);
+    clear distancia_lab;
+        
+    % Paso 3: Mostrando los resultados
+    rgb_label = repmat(label,[1 1 3]);
+    img_sementada = zeros([size(RGB), nColors],'uint8');
 
-        [~, label] = min(distance,[],3);
-        label = color_labels(label);
-        clear distance;
-        
-        rgb_label = repmat(label,[1 1 3]);
-        segmented_images = zeros([size(RGB), nColors],'uint8');
-
-        for count = 1:nColors
-          color = RGB;
-          color(rgb_label ~= color_labels(count)) = 0;
-          segmented_images(:,:,:,count) = color;
-        end 
-
-        imshow(segmented_images(:,:,:,2)), title('red objects');
-        figure;
-        imshow(segmented_images(:,:,:,3)), title('green objects');
-        figure;
-        imshow(segmented_images(:,:,:,4)), title('purple objects');
-        figure;
-        imshow(segmented_images(:,:,:,6)), title('yellow objects');
-        figure;
-        imshow(segmented_images(:,:,:,5)), title('magenta objects');
+    for count = 1:nColors
+        color = RGB;
+        color(rgb_label ~= color_labels(count)) = 0;
+        img_sementada(:,:,:,count) = color;
+    end
+    
+    figure;
+    imshow(img_sementada(:,:,:,2)), title('Objetos Rojos');
+    figure;
+    imshow(img_sementada(:,:,:,3)), title('Objetos Verdes');
+    figure;
+    imshow(img_sementada(:,:,:,4)), title('Objetos Morados');
+    figure;
+    imshow(img_sementada(:,:,:,6)), title('Objetos Amarillos');
+    figure;
+    imshow(img_sementada(:,:,:,5)), title('Objetos Magenta');
     
     return
 end
